@@ -21,7 +21,8 @@ class SitemapLoader(WebBaseLoader):
         filter_urls: Optional[List[str]] = None,
         parsing_function: Optional[Callable] = None,
         proxy: Optional[StrOrURL] = None, 
-        proxy_auth: Optional[BasicAuth] = None
+        proxy_auth: Optional[BasicAuth] = None,
+        cookies: Optional[dict] = None,
     ):
         """Initialize with webpage path and optional filter URLs.
 
@@ -41,7 +42,7 @@ class SitemapLoader(WebBaseLoader):
                 "lxml package not found, please install it with " "`pip install lxml`"
             )
 
-        super().__init__(web_path, proxy=proxy, proxy_auth=proxy_auth)
+        super().__init__(web_path, proxy=proxy, proxy_auth=proxy_auth, cookies=cookies)
 
         self.filter_urls = filter_urls
         self.parsing_function = parsing_function or _default_parsing_function
