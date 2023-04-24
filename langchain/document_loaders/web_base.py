@@ -56,7 +56,12 @@ class WebBaseLoader(BaseLoader):
     """aio proxy auth"""
 
     def __init__(
-        self, web_path: Union[str, List[str]], header_template: Optional[dict] = None, proxy: Optional[StrOrURL] = None, proxy_auth: Optional[BasicAuth] = None
+        self,
+        web_path: Union[str, List[str]],
+        header_template: Optional[dict] = None,
+        proxy: Optional[StrOrURL] = None,
+        proxy_auth: Optional[BasicAuth] = None,
+        cookies: Optional[dict] = None,
     ):
         """Initialize with webpage path."""
 
@@ -78,17 +83,23 @@ class WebBaseLoader(BaseLoader):
                 "bs4 package not found, please install it with " "`pip install bs4`"
             )
 
-        try:
-            from fake_useragent import UserAgent
+        headers = header_template or default_header_template
+        if "User-Agent" not in headers or headers["User-Agent"] == "" or headers["User-Agent"] == None:
+            try:
+                from fake_useragent import UserAgent
+                headers["User-Agent"] = UserAgent().random
+            except ImportError:
+                logger.info(
+                    "fake_useragent not found, using default user agent."
+                    "To get a realistic header for requests, `pip install fake_useragent`."
+                )
 
-            headers = header_template or default_header_template
-            headers["User-Agent"] = UserAgent().random
-            self.session.headers = dict(headers)
-        except ImportError:
-            logger.info(
-                "fake_useragent not found, using default user agent."
-                "To get a realistic header for requests, `pip install fake_useragent`."
-            )
+        self.session.headers = dict(headers)
+
+        # Combine cookies
+        if cookies is None:
+            cookies = {}
+        self.session.cookies.update(cookies)
 
     @property
     def web_path(self) -> str:
@@ -99,7 +110,7 @@ class WebBaseLoader(BaseLoader):
     async def _fetch(
         self, url: str, retries: int = 3, cooldown: int = 2, backoff: float = 1.5
     ) -> str:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(cookies=self.session.cookies.get_dict()) as session:
             for i in range(retries):
                 try:
                     async with session.get(
