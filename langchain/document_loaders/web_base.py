@@ -178,7 +178,14 @@ class WebBaseLoader(BaseLoader):
 
         self._check_parser(parser)
 
-        html_doc = self.session.get(url, proxy=self.proxy, proxy_auth=self.proxy_auth)
+        proxies = None
+        if self.proxy is not None:
+            proxies = {
+                "http": self.proxy,
+                "https": self.proxy,
+            }
+
+        html_doc = self.session.get(url, proxies=proxies)
         return BeautifulSoup(html_doc.text, parser)
 
     def scrape(self, parser: Union[str, None] = None) -> Any:

@@ -30,6 +30,8 @@ class SitemapLoader(WebBaseLoader):
             filter_urls: list of strings or regexes that will be applied to filter the
                 urls that are parsed and loaded
             parsing_function: Function to parse bs4.Soup output
+            proxy: proxy url
+            proxy_auth: proxy server authentication
         """
 
         try:
