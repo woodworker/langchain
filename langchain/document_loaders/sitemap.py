@@ -3,9 +3,10 @@ import itertools
 import re
 from typing import Any, Callable, Generator, Iterable, List, Optional
 
-from langchain.document_loaders.web_base import WebBaseLoader
-from aiohttp.typedefs import StrOrURL
 from aiohttp.helpers import BasicAuth
+from aiohttp.typedefs import StrOrURL
+
+from langchain.document_loaders.web_base import WebBaseLoader
 from langchain.schema import Document
 
 
