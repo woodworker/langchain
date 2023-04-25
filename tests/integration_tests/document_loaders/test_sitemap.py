@@ -1,7 +1,7 @@
 import pytest
 
 from langchain.document_loaders import SitemapLoader
-
+import pytest
 
 def test_sitemap() -> None:
     """Test sitemap loader."""

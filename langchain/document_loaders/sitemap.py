@@ -19,7 +19,6 @@ def _batch_block(iterable: Iterable, size: int) -> Generator[List[dict], None, N
     while item := list(itertools.islice(it, size)):
         yield item
 
-
 class SitemapLoader(WebBaseLoader):
     """Loader that fetches a sitemap and loads those URLs."""
 
@@ -56,6 +55,9 @@ class SitemapLoader(WebBaseLoader):
             )
 
         super().__init__(web_path)
+
+        self.blocksize = blocksize
+        self.blocknum = blocknum
 
         self.filter_urls = filter_urls
         self.parsing_function = parsing_function or _default_parsing_function
