@@ -2,9 +2,10 @@
 import re
 from typing import Any, Callable, List, Optional
 
-from langchain.document_loaders.web_base import WebBaseLoader
-from aiohttp.typedefs import StrOrURL
 from aiohttp.helpers import BasicAuth
+from aiohttp.typedefs import StrOrURL
+
+from langchain.document_loaders.web_base import WebBaseLoader
 from langchain.schema import Document
 
 
@@ -21,7 +22,7 @@ class SitemapLoader(WebBaseLoader):
         filter_urls: Optional[List[str]] = None,
         parsing_function: Optional[Callable] = None,
         header_template: Optional[dict] = None,
-        proxy: Optional[StrOrURL] = None, 
+        proxy: Optional[StrOrURL] = None,
         proxy_auth: Optional[BasicAuth] = None,
         cookies: Optional[dict] = None,
     ):
@@ -43,7 +44,13 @@ class SitemapLoader(WebBaseLoader):
                 "lxml package not found, please install it with " "`pip install lxml`"
             )
 
-        super().__init__(web_path, proxy=proxy, proxy_auth=proxy_auth, cookies=cookies, header_template=header_template)
+        super().__init__(
+            web_path,
+            proxy=proxy,
+            proxy_auth=proxy_auth,
+            cookies=cookies,
+            header_template=header_template,
+        )
 
         self.filter_urls = filter_urls
         self.parsing_function = parsing_function or _default_parsing_function
