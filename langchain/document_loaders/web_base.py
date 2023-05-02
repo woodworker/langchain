@@ -6,8 +6,6 @@ from typing import Any, List, Optional, Union
 
 import aiohttp
 import requests
-from aiohttp.helpers import BasicAuth
-from aiohttp.typedefs import StrOrURL
 
 from langchain.docstore.document import Document
 from langchain.document_loaders.base import BaseLoader
@@ -49,19 +47,8 @@ class WebBaseLoader(BaseLoader):
     default_parser: str = "html.parser"
     """Default parser to use for BeautifulSoup."""
 
-    proxy: Optional[StrOrURL] = None
-    """aiohttp proxy server"""
-
-    proxy_auth: Optional[BasicAuth] = None
-    """aio proxy auth"""
-
     def __init__(
-        self,
-        web_path: Union[str, List[str]],
-        header_template: Optional[dict] = None,
-        proxy: Optional[StrOrURL] = None,
-        proxy_auth: Optional[BasicAuth] = None,
-        cookies: Optional[dict] = None,
+        self, web_path: Union[str, List[str]], header_template: Optional[dict] = None
     ):
         """Initialize with webpage path."""
 
@@ -74,8 +61,6 @@ class WebBaseLoader(BaseLoader):
             self.web_paths = web_path
 
         self.session = requests.Session()
-        self.proxy = proxy
-        self.proxy_auth = proxy_auth
         try:
             import bs4  # noqa:F401
         except ImportError:
@@ -83,28 +68,17 @@ class WebBaseLoader(BaseLoader):
                 "bs4 package not found, please install it with " "`pip install bs4`"
             )
 
-        headers = header_template or default_header_template
-        if (
-            "User-Agent" not in headers
-            or headers["User-Agent"] == ""
-            or headers["User-Agent"] == None
-        ):
-            try:
-                from fake_useragent import UserAgent
+        try:
+            from fake_useragent import UserAgent
 
-                headers["User-Agent"] = UserAgent().random
-            except ImportError:
-                logger.info(
-                    "fake_useragent not found, using default user agent."
-                    "To get a realistic header for requests, `pip install fake_useragent`."
-                )
-
-        self.session.headers = dict(headers)
-
-        # Combine cookies
-        if cookies is None:
-            cookies = {}
-        self.session.cookies.update(cookies)
+            headers = header_template or default_header_template
+            headers["User-Agent"] = UserAgent().random
+            self.session.headers = dict(headers)
+        except ImportError:
+            logger.info(
+                "fake_useragent not found, using default user agent."
+                "To get a realistic header for requests, `pip install fake_useragent`."
+            )
 
     @property
     def web_path(self) -> str:
@@ -121,10 +95,7 @@ class WebBaseLoader(BaseLoader):
             for i in range(retries):
                 try:
                     async with session.get(
-                        url,
-                        headers=self.session.headers,
-                        proxy=self.proxy,
-                        proxy_auth=self.proxy_auth,
+                        url, headers=self.session.headers
                     ) as response:
                         return await response.text()
                 except aiohttp.ClientConnectionError as e:
@@ -199,14 +170,8 @@ class WebBaseLoader(BaseLoader):
 
         self._check_parser(parser)
 
-        proxies = None
-        if self.proxy is not None:
-            proxies = {
-                "http": self.proxy,
-                "https": self.proxy,
-            }
-
-        html_doc = self.session.get(url, proxies=proxies)
+        html_doc = self.session.get(url)
+        html_doc.encoding = html_doc.apparent_encoding
         return BeautifulSoup(html_doc.text, parser)
 
     def scrape(self, parser: Union[str, None] = None) -> Any:
