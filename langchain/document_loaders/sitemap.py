@@ -1,7 +1,7 @@
 """Loader that fetches a sitemap and loads those URLs."""
 import re
 import itertools
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Iterable, Generator
 
 from aiohttp.helpers import BasicAuth
 from aiohttp.typedefs import StrOrURL
@@ -13,8 +13,10 @@ from langchain.schema import Document
 def _default_parsing_function(content: Any) -> str:
     return str(content.get_text())
 
+def _default_meta_function(list: dict, _content: Any) -> dict:
+    return list
 
-def _batch_block(iterable, size):
+def _batch_block(iterable: Iterable, size: int) -> Generator[List[dict], None, None]:
     it = iter(iterable)
     while item := list(itertools.islice(it, size)):
         yield item
@@ -27,6 +29,7 @@ class SitemapLoader(WebBaseLoader):
         web_path: str,
         filter_urls: Optional[List[str]] = None,
         parsing_function: Optional[Callable] = None,
+        meta_function: Optional[Callable] = None,
         header_template: Optional[dict] = None,
         proxy: Optional[StrOrURL] = None,
         proxy_auth: Optional[BasicAuth] = None,
@@ -66,6 +69,7 @@ class SitemapLoader(WebBaseLoader):
         self.blocknum = blocknum
 
         self.filter_urls = filter_urls
+        self.meta_function = meta_function or _default_meta_function
         self.parsing_function = parsing_function or _default_parsing_function
 
     def parse_sitemap(self, soup: Any) -> List[dict]:
@@ -120,7 +124,7 @@ class SitemapLoader(WebBaseLoader):
         return [
             Document(
                 page_content=self.parsing_function(results[i]),
-                metadata={**{"source": els[i]["loc"]}, **els[i]},
+                metadata={**{"source": els[i]["loc"]}, **self.meta_function(els[i], results[i])},
             )
             for i in range(len(results))
         ]
